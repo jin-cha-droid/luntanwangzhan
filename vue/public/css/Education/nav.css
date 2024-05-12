@@ -1,0 +1,39 @@
+.topnav {
+    height: 70px;
+    background-color: #142052d4;
+    position: fixed;
+    z-index: 999;
+    width: 100%;
+    border-radius: 0 0 30px 30px;
+  
+    .nav-text {
+        font-size: 30px;
+        color: white;
+        margin-left: 30px;
+        line-height: 70px;
+        font-weight: bolder;
+    }
+  
+    .right-nav {
+        float: right;
+  
+        li {
+            float: left;
+            margin-right: 20px;
+            margin-top: 20px;
+  
+            a {
+                padding: 10px;
+                color: rgb(255, 255, 255);
+                font-size: 20px;
+                border: 1px solid rgba(255, 255, 255, 1);
+                transition: 0.5s all;
+            }
+  
+            a:hover {
+                box-shadow: 0 0 20px rgb(12, 12, 12);
+                padding: 11px;
+            }
+        }
+    }
+  }

@@ -1,0 +1,108 @@
+<template>
+<div class="total">
+  <div style="width: 80vw;">
+    <div class="front-notice"><i class="el-icon-bell" style="margin-right: 2px"></i>公告：{{ top }}</div>
+    <!--头部-->
+    <div class="front-header">
+      <div class="front-header-left">
+        <img src="../../public/img/logo.png" >
+        <div class="title">曌鸢阁前端论坛</div>
+      </div>
+      <div class="front-header-center">
+        <div class="front-header-nav">
+          <el-menu :default-active="$route.path" mode="horizontal" router>
+						<el-menu-item index="/front/home">首页</el-menu-item>
+						<el-menu-item index="/front/person">个人中心</el-menu-item>
+            <el-menu-item index="/Main"> 返回主页</el-menu-item>
+          </el-menu>
+        </div>
+      </div>
+
+      <div>
+        <input  placeholder="请输入关键字搜索" v-model="title" clearable></input>
+        <button type="success" @click="goSearch">搜 索</button>
+      </div>
+
+      <div class="front-header-right">
+        <div v-if="!user.username">
+          <el-button @click="$router.push('/login')">登录</el-button>
+          <el-button @click="$router.push('/register')">注册</el-button>
+        </div>
+        <div v-else>
+          <el-dropdown>
+            <div class="front-header-dropdown">
+              <img :src="user.avatar" alt="">
+              <div style="margin-left: 10px;color: #ffffff">
+                <span>{{ user.name }}</span><i class="el-icon-arrow-down" style="margin-left: 5px"></i>
+              </div>
+            </div>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>
+                <div style="text-decoration: none" @click="logout">退出</div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+      </div>
+    </div>
+    <!--主体-->
+    <div class="main-body">
+      <router-view ref="child" @update:user="updateUser" />
+    </div>
+  </div>
+</div>
+</template>
+
+<script>
+
+export default {
+  name: "FrontLayout",
+
+  data () {
+    return {
+      top: '',
+      notice: [],
+      title:'',
+      user: JSON.parse(localStorage.getItem("xm-user") || '{}'),
+    }
+  },
+
+  mounted() {
+    this.loadNotice()
+  },
+  methods: {
+    goSearch(){
+      window.open('/front/search?title='+this.title)
+    },
+    loadNotice() {
+      this.$request.get('/notice/selectAll').then(res => {
+        this.notice = res.data
+        let i = 0
+        if (this.notice && this.notice.length) {
+          this.top = this.notice[0].content
+          setInterval(() => {
+            this.top = this.notice[i].content
+            i++
+            if (i === this.notice.length) {
+              i = 0
+            }
+          }, 2500)
+        }
+      })
+    },
+    updateUser() {
+      this.user = JSON.parse(localStorage.getItem('xm-user') || '{}')   // 重新获取下用户的最新信息
+    },
+    // 退出登录
+    logout() {
+      localStorage.removeItem("xm-user");
+      this.$router.push("/login");
+    },
+  }
+
+}
+</script>
+
+<style scoped>
+  @import "../../public/css/front.css";
+</style>

@@ -1,0 +1,203 @@
+<template>
+  <div class="main-content" style="width: 50%">
+
+    <el-tabs v-model="activeName" @tab-click="clickTab">
+      <el-tab-pane  name="个人资料"  class="pane">
+        <span slot="label">
+      	  <span style="color: white;font-weight: bold;">个人资料</span>
+        </span>
+        <person-page @update:user="updateUser"/>
+      </el-tab-pane>
+      <el-tab-pane  name="我发表的博客" class="pane">
+        <span slot="label">
+      	  <span style="color: white;font-weight: bold;">我发表的帖子</span>
+        </span>
+        <div class="card" style="padding: 5px; margin: 20px;"><el-button type="primary" @click="addBlog" style="width: 80px; margin: 10px;">发表新帖</el-button></div>
+        <div style="margin: 20px">
+          <blog-list type="user" :show-opt="true" />
+        </div>
+      </el-tab-pane>
+      <!-- <el-tab-pane label="我报名的活动" name="我报名的活动">
+        <activity-list type="user" :span="8" />
+      </el-tab-pane> -->
+      <el-tab-pane  name="我的点赞" class="pane">
+        <span slot="label">
+      	  <span style="color: white;font-weight: bold;">我的点赞</span>
+        </span>
+        <!-- <div class="card" style="padding: 5px;display: flex" >
+          <div class="category-btn" :class="{'active':likesCurrent === '博客'}" @click="likesCurrent = '博客'">博客</div>
+          <div class="category-btn" :class="{'active':likesCurrent === '活动'}" @click="likesCurrent = '活动'">活动</div>
+        </div> -->
+        <div style="margin: 20px">
+          <blog-list v-if="likesCurrent === '博客'" type="like"></blog-list>
+          <activity-list v-if="likesCurrent === '活动'" :span="8" type="like"></activity-list>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane  name="我的收藏" class="pane"> 
+        <span slot="label">
+      	  <span style="color: white;font-weight: bold;">我的收藏</span>
+        </span>
+        <!-- <div class="card" style="padding: 5px;display: flex" >
+          <div class="category-btn" :class="{'active':collectCurrent === '博客'}" @click="collectCurrent = '博客'">博客</div>
+          <div class="category-btn" :class="{'active':collectCurrent === '活动'}" @click="collectCurrent = '活动'">活动</div>
+        </div> -->
+        <div style="margin: 20px">
+          <blog-list v-if="collectCurrent === '博客'" type="collect"></blog-list>
+          <activity-list v-if="collectCurrent === '活动'" :span="8" type="collect"></activity-list>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+
+    <Footer />
+  </div>
+</template>
+
+<script>
+import Footer from "@/components/Footer";
+import PersonPage from "@/components/PersonPage";
+import BlogList from "@/components/BlogList";
+import ActivityList from "@/components/ActivityList";
+
+export default {
+  components: {
+    ActivityList,
+    BlogList,
+    Footer,
+    PersonPage
+  },
+  data() {
+    const validatePassword = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请确认密码'))
+      } else if (value !== this.user.newPassword) {
+        callback(new Error('确认密码错误'))
+      } else {
+        callback()
+      }
+    }
+    return {
+      user: JSON.parse(localStorage.getItem('xm-user') || '{}'),
+      dialogVisible: false,
+
+      rules: {
+        password: [
+          { required: true, message: '请输入原始密码', trigger: 'blur' },
+        ],
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+        ],
+        confirmPassword: [
+          { validator: validatePassword, required: true, trigger: 'blur' },
+        ],
+      },
+      activeName: '个人资料',
+      likesCurrent:'博客',
+      collectCurrent:'博客'
+    }
+  },
+  created() {
+
+  },
+  methods: {
+    updateUser(){
+      this.$emit('update:user')
+    },
+    addBlog() {
+      window.open('/front/newBlog')
+    },
+    clickTab(tab) {
+      console.log(tab)
+    },
+    update() {
+      // 保存当前的用户信息到数据库
+      this.$request.put('/user/update', this.user).then(res => {
+        if (res.code === '200') {
+          // 成功更新
+          this.$message.success('保存成功')
+          // 更新浏览器缓存里的用户信息
+          localStorage.setItem('xm-user', JSON.stringify(this.user))
+
+          // 触发父级的数据更新
+          this.$emit('update:user')
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    handleAvatarSuccess(response, file, fileList) {
+      // 把user的头像属性换成上传的图片的链接
+      this.$set(this.user, 'avatar', response.data)
+    },
+    // 修改密码
+    updatePassword() {
+      this.dialogVisible = true
+    },
+    save() {
+      this.$refs.formRef.validate((valid) => {
+        if (valid) {
+          this.$request.put('/updatePassword', this.user).then(res => {
+            if (res.code === '200') {
+              // 成功更新
+              this.$message.success('修改密码成功')
+              this.$router.push('/login')
+            } else {
+              this.$message.error(res.msg)
+            }
+          })
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style >
+.card {
+  border: 1px solid #142052;
+  border-radius: 30px;
+  background-color: #142052d4;
+  box-shadow: 0 0 20px #61749C;
+  margin: 20px;
+}
+:deep(.el-form-item__label) {
+  font-weight: bold;
+  color: white ;
+  
+}
+:deep(.el-upload) {
+  border-radius: 50%;
+  color: white ;
+}
+:deep(.avatar-uploader .el-upload ){
+  border: 1px dashed #d9d9d9;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border-radius: 50%;
+}
+:deep(.avatar-uploader .el-upload:hover) {
+  border-color: #409EFF;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 120px;
+  height: 120px;
+  line-height: 120px;
+  text-align: center;
+  border-radius: 50%;
+}
+.avatar {
+  width: 120px;
+  height: 120px;
+  display: block;
+  border-radius: 50%;
+}
+.category-btn{
+  width: fit-content;padding: 5px 10px;cursor: pointer;border-radius: 5px;
+}
+.active{
+  background-color: #2a60c9 ;
+  color: white ;
+}
+</style>
